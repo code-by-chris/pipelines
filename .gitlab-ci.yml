@@ -1,0 +1,12 @@
+stages:
+  - build
+  - lint
+  - test
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+include:
+  - local: .gitlab/pipelines/build.yml
+  - local: .gitlab/pipelines/lint.yml
+  - local: .gitlab/pipelines/test.yml

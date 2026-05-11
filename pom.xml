@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Spring Boot Parent – verwaltet alle Versionen automatisch -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.2.12</version>
+    <relativePath/>
+  </parent>
+
+  <!-- Projekt Daten -->
+  <groupId>de.fherfurt</groupId>
+  <artifactId>ToDo</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>ToDo</name>
+  <description>Todo REST API – CI/CD Pipeline Projekt</description>
+
+  <properties>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <sonar.projectKey>todo-api</sonar.projectKey>
+    <sonar.coverage.jacoco.xmlReportPaths>
+      target/site/jacoco/jacoco.xml
+    </sonar.coverage.jacoco.xmlReportPaths>
+
+    <!-- Security Fixes -->
+    <jackson-bom.version>2.18.6</jackson-bom.version>
+    <tomcat.version>10.1.54</tomcat.version>
+    <commons-lang3.version>3.18.0</commons-lang3.version>
+  </properties>
+
+  <dependencies>
+
+    <!-- ───── SPRING BOOT ───── -->
+
+    <!-- Web-Schicht: REST API, HTTP, Jackson (JSON) -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+
+    <!-- Validierung: @NotBlank, @Size etc. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+
+    <!-- ───── LOMBOK ───── -->
+
+    <!-- Boilerplate-Reduktion: @Data, @Slf4j, @RequiredArgsConstructor etc. -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
+
+    <!-- ───── TEST ───── -->
+
+    <!-- JUnit 5 + Mockito + Spring Test -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- REST Assured – E2E Tests gegen die laufende API -->
+    <dependency>
+      <groupId>io.rest-assured</groupId>
+      <artifactId>rest-assured</artifactId>
+      <version>5.4.0</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+  <build>
+    <plugins>
+
+      <!-- ★ NEU: Compiler Plugin mit Lombok Annotation Processor -->
+      <!-- Ohne diesen Block erkennt Maven @Slf4j, @Data etc. nicht -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>21</source>
+          <target>21</target>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+
+      <!-- Spring Boot Plugin – erstellt ausführbares JAR -->
+      <!-- Lombok wird aus dem finalen JAR ausgeschlossen (zur Laufzeit nicht nötig) -->
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+            </exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <!-- Surefire – führt Unit Tests aus (E2E ausgeschlossen) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <excludes>
+            <exclude>**/e2e/**</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+
+      <!-- Failsafe – führt E2E Tests aus -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <includes>
+            <include>**/e2e/**</include>
+          </includes>
+        </configuration>
+      </plugin>
+
+      <!-- JaCoCo – misst Code Coverage und erstellt XML-Report für SonarQube -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.11</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Checkstyle – prüft Code-Stil (Einrückung, Zeilenlänge etc.) -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>3.3.1</version>
+        <configuration>
+          <configLocation>google_checks.xml</configLocation>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+        </configuration>
+      </plugin>
+
+      <!-- SpotBugs – erkennt typische Programmierfehler -->
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>4.8.3.1</version>
+        <configuration>
+          <effort>Max</effort>
+          <threshold>Medium</threshold>
+          <failOnError>true</failOnError>
+        </configuration>
+      </plugin>
+
+      <!-- SonarQube – Code-Qualitätsanalyse -->
+      <plugin>
+        <groupId>org.sonarsource.scanner.maven</groupId>
+        <artifactId>sonar-maven-plugin</artifactId>
+        <version>3.11.0.3922</version>
+      </plugin>
+
+    </plugins>
+  </build>
+
+</project>

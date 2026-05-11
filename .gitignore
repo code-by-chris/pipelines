@@ -1,0 +1,14 @@
+# Build outputs
+target/
+build/
+
+!.mvn/wrapper/maven-wrapper.jar
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# macOS
+.DS_Store
