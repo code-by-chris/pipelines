@@ -1,0 +1,23 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Ermöglicht manuelles Ausführen
+
+jobs:
+  lint:
+    uses: ./.github/workflows/lint.yml
+    secrets: inherit
+
+  test:
+    uses: ./.github/workflows/test.yml
+    secrets: inherit
+    needs: lint
+
+  build:
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    needs: test

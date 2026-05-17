@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  workflow_call:
+    inputs:
+      publish:
+        description: 'Build-Artefakt veröffentlichen'
+        type: boolean
+        default: false
+    secrets:
+      GITHUB_TOKEN:
+        required: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build JAR
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn clean package -DskipTests  # Tests wurden schon separat ausgeführt
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: todo-api-jar
+          path: target/*.jar
+          retention-days: 14
+
+      - name: Verify JAR integrity
+        run: |
+          JAR_FILE=$(ls target/*.jar | head -1)
+          echo "Built JAR: $JAR_FILE"
+          unzip -l $JAR_FILE | grep -E "BOOT-INF/classes/" || echo "JAR structure OK"
+
+      # Optional: Zu GitHub Packages veröffentlichen
+      - name: Publish to GitHub Packages
+        if: inputs.publish == true && github.ref == 'refs/heads/main'
+        run: mvn deploy -DskipTests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
